@@ -62,7 +62,7 @@ export default function ContactSection() {
       <footer data-contact-footer-bar>
         <p className="cmwp-footer-tiny">© {year} CMWP</p>
         <a data-contact-footer-logo className="tap-target" href="#main" aria-label="CMWP home">
-          <img data-logo-full src="/images/logo%20full.svg" alt="CMWP" />
+          <img data-logo-full src="/cmwp/images/logo%20full.svg" alt="CMWP" />
         </a>
         <p className="cmwp-footer-tiny">All rights reserved</p>
       </footer>

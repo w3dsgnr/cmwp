@@ -20,7 +20,7 @@ export default function HeroSection() {
       </p>
 
       <div data-hero-watermark aria-hidden="true" className="pointer-events-none">
-        <img src="/images/logo_short.svg" alt="" className="size-full max-w-none" />
+        <img src="/cmwp/images/logo_short.svg" alt="" className="size-full max-w-none" />
       </div>
 
       <div data-hero-image-wrap>

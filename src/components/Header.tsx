@@ -61,7 +61,7 @@ export default function Header() {
     >
       <div data-site-header-inner>
         <a data-site-logo className="tap-target" href="#main" aria-label="CMWP home">
-          <img data-logo-full src="/images/logo%20full.svg" alt="CMWP" />
+          <img data-logo-full src="/cmwp/images/logo%20full.svg" alt="CMWP" />
         </a>
 
         <nav data-site-header-nav aria-label="Primary">
