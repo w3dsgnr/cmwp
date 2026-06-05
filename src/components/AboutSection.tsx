@@ -45,7 +45,7 @@ const stats = [
 export default function AboutSection() {
   return (
     <section id="about" aria-labelledby="about-heading" data-about-section>
-      <div data-about-copy>
+      <div data-about-copy data-reveal>
         <h2 id="about-heading" className="cmwp-headline">
           Independent thinking.
           <br />
@@ -61,7 +61,7 @@ export default function AboutSection() {
 
       <div data-stats-row>
         {stats.map(({ headline, caption }) => (
-          <div key={headline} data-stat-cell>
+          <div key={headline} data-stat-cell data-reveal>
             <p className="cmwp-stat-num">{headline}</p>
             <p className="cmwp-note text-c-dark">{caption}</p>
           </div>

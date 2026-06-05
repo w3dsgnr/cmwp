@@ -30,6 +30,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={segoe.variable}>
+      <head>
+        {/* Set before paint so reveal targets hide instantly (with JS) but
+            stay visible if JS is disabled. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('reveal-js')",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

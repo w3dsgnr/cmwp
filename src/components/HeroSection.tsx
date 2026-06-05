@@ -8,7 +8,7 @@ export default function HeroSection() {
   return (
     <section aria-labelledby="hero-heading" data-hero-section>
       <div data-hero-stack>
-        <h1 id="hero-heading" className="cmwp-headline tracking-tight leading-none" data-hero-heading>
+        <h1 id="hero-heading" className="cmwp-headline tracking-tight leading-none" data-hero-heading data-reveal>
           <span className="block">We help businesses make </span>
           <span className="block">the right real estate decisions — with international expertise </span>
           <span className="block">and local precision.</span>
@@ -16,7 +16,7 @@ export default function HeroSection() {
       </div>
 
       <div data-hero-sub-row>
-        <p className="cmwp-body" data-hero-sub>
+        <p className="cmwp-body" data-hero-sub data-reveal>
           CMWP is an independent advisory firm helping landowners, investors, occupiers and
           corporate clients navigate commercial real estate in Cyprus — from strategy through to
           delivery.

@@ -18,7 +18,7 @@ export default function ServicesSection() {
         />
 
         <div data-services-title>
-          <h2 id="services-banner-heading" className="cmwp-display text-c-white">
+          <h2 id="services-banner-heading" className="cmwp-display text-c-white" data-reveal>
             Five practices.
             <br />
             One discipline.
@@ -27,7 +27,7 @@ export default function ServicesSection() {
       </div>
 
       <div data-services-list>
-        <article data-service-row>
+        <article data-service-row data-reveal>
           <div data-service-meta>
             <p className="cmwp-note text-c-white">ADVISORY</p>
             <h3 className="cmwp-title text-c-white">
@@ -49,7 +49,7 @@ export default function ServicesSection() {
           </div>
         </article>
 
-        <article data-service-row>
+        <article data-service-row data-reveal>
           <div data-service-meta>
             <p className="cmwp-note text-c-white">OCCUPIER</p>
             <h3 className="cmwp-title text-c-white">
@@ -70,7 +70,7 @@ export default function ServicesSection() {
           </div>
         </article>
 
-        <article data-service-row>
+        <article data-service-row data-reveal>
           <div data-service-meta>
             <p className="cmwp-note text-c-white">INVESTMENT</p>
             <h3 className="cmwp-title text-c-white">
@@ -89,7 +89,7 @@ export default function ServicesSection() {
           </div>
         </article>
 
-        <article data-service-row>
+        <article data-service-row data-reveal>
           <div data-service-meta>
             <p className="cmwp-note text-c-white">DELIVERY</p>
             <h3 className="cmwp-title text-c-white">
@@ -111,7 +111,7 @@ export default function ServicesSection() {
           </div>
         </article>
 
-        <article data-service-row>
+        <article data-service-row data-reveal>
           <div data-service-meta>
             <p className="cmwp-note text-c-white">WORKPLACE</p>
             <h3 className="cmwp-title text-c-white">

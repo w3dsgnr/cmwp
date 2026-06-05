@@ -10,7 +10,7 @@ export default function ContactSection() {
   return (
     <section id="contact" aria-labelledby="contact-heading" data-contact-section>
       <div data-contact-inner>
-        <div data-contact-intro>
+        <div data-contact-intro data-reveal>
           <h2 id="contact-heading" className="cmwp-title">
             Start a conversation.
             <br />
@@ -29,7 +29,7 @@ export default function ContactSection() {
             />
           </div>
 
-          <div data-contact-card>
+          <div data-contact-card data-reveal>
             <article data-contact-block>
               <div data-contact-label-stack>
                 <p className="cmwp-note text-c-dark">OFFICE</p>
@@ -62,7 +62,7 @@ export default function ContactSection() {
           </div>
         </div>
 
-        <footer data-contact-footer-bar>
+        <footer data-contact-footer-bar data-reveal>
           <p className="cmwp-footer-tiny">© {year} CMWP</p>
           <a data-contact-footer-logo className="tap-target" href="#main" aria-label="CMWP home">
             <img data-logo-full src={asset('/images/logo%20full.svg')} alt="CMWP" />
