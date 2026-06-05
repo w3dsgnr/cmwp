@@ -29,7 +29,7 @@ export default function HeroSection() {
 
       <div data-hero-image-wrap>
         <Image
-          src={asset('/images/Frame%20119.png')}
+          src={asset('/images/Frame%20119.webp')}
           alt="Contemporary commercial building façade"
           fill
           className="object-cover object-bottom"

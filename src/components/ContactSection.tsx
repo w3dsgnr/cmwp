@@ -21,7 +21,7 @@ export default function ContactSection() {
         <div data-contact-stage>
           <div aria-hidden="true" data-contact-bg>
             <Image
-              src={asset('/images/Frame%20120.png')}
+              src={asset('/images/Frame%20120.webp')}
               alt=""
               fill
               className="object-cover"

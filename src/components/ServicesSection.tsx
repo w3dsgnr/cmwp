@@ -9,7 +9,7 @@ export default function ServicesSection() {
     <section id="services" aria-labelledby="services-banner-heading" data-services-section>
       <div data-services-visual>
         <Image
-          src={asset('/images/Mask%20group.png')}
+          src={asset('/images/Mask%20group.webp')}
           alt=""
           aria-hidden="true"
           fill
