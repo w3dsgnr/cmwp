@@ -29,7 +29,9 @@ export default function RevealManager() {
           }
         });
       },
-      { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+      // No negative bottom margin: elements at the very bottom of the page
+      // (e.g. the footer) can never scroll past it, so they'd stay hidden.
+      { threshold: 0.12 },
     );
 
     els.forEach((el) => observer.observe(el));
