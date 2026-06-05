@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { asset } from '@/lib/asset';
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHiddenOnScroll, setIsHiddenOnScroll] = useState(false);
@@ -61,17 +63,17 @@ export default function Header() {
     >
       <div data-site-header-inner>
         <a data-site-logo className="tap-target" href="#main" aria-label="CMWP home">
-          <img data-logo-full src="/cmwp/images/logo%20full.svg" alt="CMWP" />
+          <img data-logo-full src={asset('/images/logo%20full.svg')} alt="CMWP" />
         </a>
 
         <nav data-site-header-nav aria-label="Primary">
-          <a className="cmwp-nav-link" style={{ color: '#171616' }} href="#about" onClick={handleNavClick}>
+          <a className="cmwp-nav-link text-c-dark" href="#about" onClick={handleNavClick}>
             About
           </a>
-          <a className="cmwp-nav-link" style={{ color: '#171616' }} href="#services" onClick={handleNavClick}>
+          <a className="cmwp-nav-link text-c-dark" href="#services" onClick={handleNavClick}>
             Services
           </a>
-          <a className="cmwp-nav-link" style={{ color: '#171616' }} href="#contact" onClick={handleNavClick}>
+          <a className="cmwp-nav-link text-c-dark" href="#contact" onClick={handleNavClick}>
             Contact
           </a>
         </nav>
@@ -98,13 +100,13 @@ export default function Header() {
 
       <div data-site-header-panel id="mobile-header-panel" aria-hidden={!isMobileMenuOpen}>
         <nav data-site-header-nav-mobile aria-label="Primary mobile">
-          <a className="cmwp-nav-link" style={{ color: '#171616' }} href="#about" onClick={handleNavClick}>
+          <a className="cmwp-nav-link text-c-dark" href="#about" onClick={handleNavClick}>
             About
           </a>
-          <a className="cmwp-nav-link" style={{ color: '#171616' }} href="#services" onClick={handleNavClick}>
+          <a className="cmwp-nav-link text-c-dark" href="#services" onClick={handleNavClick}>
             Services
           </a>
-          <a className="cmwp-nav-link" style={{ color: '#171616' }} href="#contact" onClick={handleNavClick}>
+          <a className="cmwp-nav-link text-c-dark" href="#contact" onClick={handleNavClick}>
             Contact
           </a>
         </nav>

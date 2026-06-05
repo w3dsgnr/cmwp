@@ -1,5 +1,21 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import './globals.css';
+
+// Self-hosted via next/font so the URLs resolve correctly regardless of basePath.
+const segoe = localFont({
+  src: [
+    { path: '../../public/fonts/SegoeUI-Light.woff2', weight: '300', style: 'normal' },
+    { path: '../../public/fonts/SegoeUI.woff2', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/SegoeUI-Italic.woff2', weight: '400', style: 'italic' },
+    { path: '../../public/fonts/SegoeUI-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/SegoeUI-Bold.woff2', weight: '700', style: 'normal' },
+    { path: '../../public/fonts/SegoeUI-BoldItalic.woff2', weight: '700', style: 'italic' },
+  ],
+  variable: '--font-segoe',
+  display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'sans-serif'],
+});
 
 export const metadata: Metadata = {
   title: 'CMWP — Commercial Real Estate Advisory',
@@ -13,15 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-        />
-      </head>
+    <html lang="en" className={segoe.variable}>
       <body>{children}</body>
     </html>
   );

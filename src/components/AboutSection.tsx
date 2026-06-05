@@ -46,7 +46,7 @@ export default function AboutSection() {
   return (
     <section id="about" aria-labelledby="about-heading" data-about-section>
       <div data-about-copy>
-        <h2 id="about-heading" className="cmwp-h2">
+        <h2 id="about-heading" className="cmwp-headline">
           Independent thinking.
           <br />
           Local execution.
@@ -59,13 +59,11 @@ export default function AboutSection() {
         </p>
       </div>
 
-      <div data-stats-row role="presentation">
+      <div data-stats-row>
         {stats.map(({ headline, caption }) => (
           <div key={headline} data-stat-cell>
-            <p className="cmwp-stat-num" style={{ fontWeight: 600 }}>
-              {headline}
-            </p>
-            <p className="cmwp-note" style={{ color: '#171616' }}>{caption}</p>
+            <p className="cmwp-stat-num">{headline}</p>
+            <p className="cmwp-note text-c-dark">{caption}</p>
           </div>
         ))}
       </div>

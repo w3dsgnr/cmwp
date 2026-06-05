@@ -3,6 +3,7 @@
 /build/
 /node_modules/
 /figma/
+/design/
 /.pnp
 .pnp.js
 

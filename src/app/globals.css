@@ -10,62 +10,19 @@
   --color-c-divider-dark: #2b2b2b;
 }
 
-@font-face {
-  font-family: "Segoe UI";
-  src: url("/cmwp/fonts/SegoeUI-Light.woff2") format("woff2");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Segoe UI";
-  src: url("/cmwp/fonts/SegoeUI.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Segoe UI";
-  src: url("/cmwp/fonts/SegoeUI-Italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Segoe UI";
-  src: url("/cmwp/fonts/SegoeUI-SemiBold.woff2") format("woff2");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Segoe UI";
-  src: url("/cmwp/fonts/SegoeUI-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Segoe UI";
-  src: url("/cmwp/fonts/SegoeUI-BoldItalic.woff2") format("woff2");
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
-}
-
 :root {
-  --font-main: "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* --font-segoe is provided by next/font/local (see layout.tsx). */
+  --font-main: var(--font-segoe), system-ui, -apple-system, sans-serif;
 
-  --container-max: 1440px;
+  --container-max: 1920px;
   --gutter: clamp(16px, 3vw, 48px);
   --section-px: 64px;
+
+  /* Center content in a max --container-max column on wide screens.
+     Below --container-max these collapse to the plain gutter (no regression). */
+  --edge: calc(max(0px, (100% - var(--container-max)) / 2) + var(--section-px));
+  --edge-img: calc(max(0px, (100% - var(--container-max)) / 2) + var(--header-margin-x));
   --section-py: 64px;
-  --section-pad-y: clamp(32px, 4.5vw, 72px);
 
   --c-bg: #eff0f2;
   --c-hero-bg: #efefef;
@@ -81,25 +38,15 @@
   --header-offset-y: 36px;
   --header-h: 92px;
   --header-radius: 20px;
-  --header-max-w: 1368px;
   --header-margin-x: 24px;
   --header-pad-inline: 28px;
 
   --hero-min-h: 1200px;
   --hero-image-h: 520px;
-  --about-min-h: 736px;
-  --services-visual-h: none;
-  --contact-min-h: 1232px;
 
-  --hero-heading-pt: 176px;
-  --hero-heading-max-w: 944px;
-  --hero-sub-offset: 60px;
-  --hero-watermark-w: clamp(140px, 18vw, 249px);
-  --hero-watermark-lift: clamp(12px, 3vw, 40px);
   --stats-gap: 0px;
   --c-contact-heading: #101010;
 
-  --stat-inner-gap: 18px;
   --site-cta-gap: 5px;
   --site-cta-icon-size: 14px;
   --logo-h: 28px;
@@ -191,20 +138,20 @@ img {
 }
 
 /* Typography (desktop ≥1280px matches Figma) */
-.cmwp-h1 {
+.cmwp-display {
   font-size: clamp(2.75rem, 7vw, 5.5rem);
   line-height: 1;
   letter-spacing: -0.03em;
   font-weight: 400;
 }
 
-.cmwp-h2 {
+.cmwp-headline {
   font-size: clamp(2rem, 5vw, 4rem);
   line-height: 1;
   font-weight: 600;
 }
 
-.cmwp-h3 {
+.cmwp-title {
   font-size: clamp(1.5rem, 3vw, 2.5rem);
   line-height: 1.06;
   letter-spacing: 0.02em;
@@ -234,16 +181,16 @@ img {
 }
 
 @media (min-width: 1280px) {
-  .cmwp-h1 {
+  .cmwp-display {
     font-size: 88px;
     letter-spacing: -2.64px;
   }
 
-  .cmwp-h2 {
+  .cmwp-headline {
     font-size: 64px;
   }
 
-  .cmwp-h3 {
+  .cmwp-title {
     font-size: 40px;
     letter-spacing: 0.8px;
   }
@@ -286,8 +233,8 @@ img {
 [data-site-header-wrap] {
   position: fixed;
   top: var(--header-offset-y);
-  left: var(--header-margin-x);
-  right: var(--header-margin-x);
+  left: var(--edge-img);
+  right: var(--edge-img);
   --header-translate-y: 0px;
   transform: translateY(var(--header-translate-y));
   transition: transform 240ms ease, box-shadow 240ms ease;
@@ -382,12 +329,9 @@ img {
 
 [data-hero-stack] {
   position: relative;
-  max-width: var(--container-max);
-  margin-inline-start: 0;
-  margin-inline-end: auto;
   width: 100%;
-  padding-inline: var(--section-px);
-  padding-top: 192px;
+  padding-inline: var(--edge);
+  padding-top: clamp(140px, 16vw, 192px);
   z-index: 2;
 }
 
@@ -395,9 +339,14 @@ img {
   max-width: 944px;
 }
 
+/* Desktop: wrapper is transparent, sub + watermark keep their absolute spots. */
+[data-hero-sub-row] {
+  display: contents;
+}
+
 [data-hero-sub] {
   position: absolute;
-  left: var(--section-px);
+  left: var(--edge);
   bottom: calc(var(--hero-image-h) + 60px);
   max-width: 802px;
   z-index: 2;
@@ -406,8 +355,8 @@ img {
 [data-hero-image-wrap] {
   position: absolute;
   bottom: 0;
-  left: var(--header-margin-x);
-  right: var(--header-margin-x);
+  left: var(--edge-img);
+  right: var(--edge-img);
   height: var(--hero-image-h);
   z-index: 1;
 }
@@ -415,7 +364,7 @@ img {
 [data-hero-watermark] {
   position: absolute;
   top: 525px;
-  right: calc(var(--section-px) + 48px);
+  right: calc(var(--edge) + 48px);
   width: 249px;
   z-index: 2;
 }
@@ -423,12 +372,10 @@ img {
 /* --- About --- */
 [data-about-section] {
   background-color: var(--c-bg);
-  min-height: var(--about-min-h);
-  padding-inline: var(--section-px);
+  padding-inline: var(--edge);
   padding-block: var(--section-py) calc(var(--section-py) + 8px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 [data-about-copy] {
@@ -439,7 +386,7 @@ img {
 }
 
 [data-stats-row] {
-  margin-top: auto;
+  margin-top: clamp(48px, 7vw, 96px);
   padding-top: 40px;
   border-top: 1px solid var(--c-border-soft);
   display: grid;
@@ -458,7 +405,7 @@ img {
 /* --- Services --- */
 [data-services-section] {
   background-color: var(--c-dark);
-  padding-inline: var(--section-px);
+  padding-inline: var(--edge);
   padding-block: var(--section-py) clamp(48px, 8vw, 72px);
   display: flex;
   flex-direction: column;
@@ -519,55 +466,50 @@ img {
 }
 
 /* --- Contact --- */
+/* Flow-based: intro → photo-framed card → footer. No absolute overlap,
+   nothing can collide or vanish; the photo frames the card at every width. */
 [data-contact-section] {
-  position: relative;
-  min-height: var(--contact-min-h);
   background-color: var(--c-hero-bg);
-  overflow: hidden;
+  padding-inline: var(--edge);
+  padding-block: clamp(56px, 8vw, 96px);
 }
 
-[data-contact-bg-wrap] {
-  position: absolute;
-  left: var(--section-px);
-  right: var(--section-px);
-  top: 140px;
-  bottom: clamp(140px, 18vh, 200px);
-  max-width: calc(var(--container-max) - 2 * var(--section-px));
+[data-contact-inner] {
+  width: 100%;
+  max-width: var(--container-max);
   margin-inline: auto;
-  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vw, 72px);
 }
 
-[data-contact-intro] .cmwp-h3 {
+[data-contact-intro] .cmwp-title {
   color: var(--c-contact-heading);
 }
 
-[data-contact-intro] {
-  position: absolute;
-  top: clamp(56px, 8vw, 72px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(var(--container-max), 100%);
-  padding-inline: var(--section-px);
-  z-index: 2;
+[data-contact-stage] {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: clamp(28px, 6vw, 96px);
+  overflow: hidden;
+  isolation: isolate;
 }
 
-[data-contact-card-wrap] {
+[data-contact-bg] {
   position: absolute;
-  left: 50%;
-  top: clamp(240px, 28vw, 260px);
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: calc(100% - 2 * var(--section-px));
-  z-index: 2;
+  inset: 0;
+  z-index: -1;
 }
 
 [data-contact-card] {
+  width: min(100%, 720px);
   background-color: var(--c-white);
   padding-inline: clamp(28px, 6vw, 40px);
   padding-block: clamp(40px, 6vw, 56px);
   display: flex;
   flex-direction: column;
-  gap: clamp(48px, 8vw, 80px);
+  gap: clamp(40px, 7vw, 72px);
   box-shadow: 0 28px 80px rgb(0 0 0 / 0.12);
 }
 
@@ -592,18 +534,11 @@ img {
 }
 
 [data-contact-footer-bar] {
-  position: absolute;
-  left: var(--section-px);
-  right: var(--section-px);
-  bottom: clamp(48px, 8vw, 72px);
-  max-width: calc(var(--container-max) - 2 * var(--section-px));
-  margin-inline: auto;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1rem clamp(16px, 4vw, 40px);
   flex-wrap: wrap;
-  z-index: 2;
 }
 
 /* --- Responsive --- */
@@ -614,12 +549,7 @@ img {
 
     --header-margin-x: 16px;
 
-    --hero-min-h: clamp(760px, 110svh, 1200px);
-    --hero-heading-pt: clamp(132px, 18vw, 176px);
-
-    --about-min-h: clamp(520px, 72vw, 700px);
-    --contact-min-h: clamp(1040px, 120vw, 1232px);
-    --hero-sub-offset: 24px;
+    --hero-min-h: auto;
 
     --stats-gap: 24px;
   }
@@ -647,21 +577,42 @@ img {
     height: clamp(320px, 48vw, 520px);
   }
 
-  [data-hero-watermark] {
-    display: none;
-  }
-
-  [data-hero-sub] {
-    position: relative;
-    left: auto;
-    bottom: auto;
+  /* Below 1280: keep logo on the same row as the text (like desktop),
+     shrinking smoothly with viewport width. */
+  [data-hero-sub-row] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(20px, 3vw, 48px);
     margin-top: 40px;
     padding-inline: var(--section-px);
   }
 
-  [data-about-section],
-  [data-hero-section] {
+  [data-hero-sub] {
+    position: static;
+    left: auto;
+    bottom: auto;
+    margin: 0;
+    padding: 0;
+    flex: 1 1 auto;
+  }
+
+  [data-hero-watermark] {
+    position: static;
+    display: block;
+    top: auto;
+    right: auto;
+    flex: 0 0 auto;
+    width: clamp(120px, 16vw, 200px);
+    margin: 0;
+  }
+
+  [data-about-section] {
     padding-bottom: clamp(40px, 8vw, 72px);
+  }
+
+  [data-hero-section] {
+    padding-bottom: 0;
   }
 
   [data-stats-row] {
@@ -676,16 +627,6 @@ img {
 
   [data-site-header-nav] {
     gap: clamp(14px, 3vw, 24px);
-  }
-
-  /* Contact: keep absolute overlap (bg behind card) on tablet */
-  [data-contact-bg-wrap] {
-    top: clamp(120px, 14vw, 160px);
-    bottom: clamp(120px, 16vw, 180px);
-  }
-
-  [data-contact-card-wrap] {
-    top: clamp(220px, 26vw, 280px);
   }
 
   [data-services-visual] {
@@ -706,7 +647,7 @@ img {
     width: 100%;
   }
 
-  [data-services-title] .cmwp-h1 {
+  [data-services-title] .cmwp-display {
     max-width: 18ch;
   }
 }
@@ -717,9 +658,7 @@ img {
     --header-h: 80px;
     --hero-min-h: auto;
     --hero-image-h: clamp(240px, 56vw, 400px);
-    --about-min-h: clamp(760px, 210vw, 960px);
 
-    --header-max-w: 100%;
     --header-pad-inline: 16px;
   }
 
@@ -807,42 +746,11 @@ img {
     grid-template-columns: 1fr;
   }
 
-  [data-contact-section] {
-    min-height: clamp(780px, 225vw, 920px);
-  }
-
-  [data-contact-intro] {
-    position: absolute;
-    padding-top: 0;
-    top: clamp(48px, 13vw, 72px);
-    left: var(--section-px);
-    right: var(--section-px);
-  }
-
-  [data-contact-bg-wrap] {
-    position: absolute;
-    height: auto;
-    top: clamp(80px, 18vw, 110px);
-    bottom: clamp(120px, 22vw, 160px);
-    left: 0;
-    right: 0;
-    margin-top: 0;
-  }
-
-  [data-contact-card-wrap] {
-    position: absolute;
-    top: clamp(95px, 25vw, 130px);
-    left: 50%;
-    transform: translateX(-50%);
-    margin-top: 0;
-    max-width: 343px;
-    width: calc(100% - 2 * var(--section-px));
-  }
-
   [data-contact-footer-bar] {
-    position: absolute;
-    bottom: 0;
-    padding-block: clamp(24px, 7vw, 48px);
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
   }
 
   /* Stack header inner: hide nav strip, show abbreviated */
@@ -850,7 +758,7 @@ img {
     gap: clamp(12px, 5vw, 16px);
   }
 
-  [data-hero-heading] .cmwp-h2 {
+  [data-hero-heading] .cmwp-headline {
     max-width: 100%;
   }
 
@@ -858,13 +766,16 @@ img {
     padding-top: calc(var(--header-offset-y) + var(--header-h) + clamp(28px, 8vw, 48px));
   }
 
-  [data-hero-sub] {
-    position: relative;
-    left: auto;
-    bottom: auto;
+  [data-hero-sub-row] {
     margin-top: 24px;
-    padding-inline: var(--section-px);
+  }
+
+  [data-hero-sub] {
     max-width: 100%;
+  }
+
+  [data-hero-watermark] {
+    display: none;
   }
 
   [data-hero-image-wrap] {
