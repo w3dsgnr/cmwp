@@ -428,9 +428,143 @@ img {
   pointer-events: none;
   padding-inline: var(--section-px);
   text-align: center;
+  z-index: 2;
+}
+
+/* --- Services: M-shape morph reveal (matches the storyboard) ---
+   The heading is STATIC: it fades in at its final size and never moves (frame 4
+   of the storyboard — "text finishes appearing, then it's static"). Only the
+   M-shape outline animates:
+   1) it traces small, framing the heading (starts at the top-centre notch);
+   2) it grows to the photo's size;
+   3) it cross-fades out as the photo fades in.
+   The small width is anchored to the heading's own type scale, so the framing
+   is the same at every width with no runtime measurement. The grow target is
+   the full photo — larger on wider screens, exactly as the storyboard notes
+   ("enlarge to the image size at the current window resolution"). */
+[data-services-visual] {
+  /* Small-outline width ≈ the heading footprint. Tracks .cmwp-display (clamp
+     below 1280, 88px above) so the frame is consistent; capped to the box. */
+  --svc-small-w: min(86%, clamp(360px, 56vw, 760px));
+  --svc-draw: 1200ms;
+  --svc-grow: 900ms;
+  --svc-reveal: 620ms;
+  --svc-gap: 90ms;
+  --svc-grow-delay: calc(var(--svc-draw) + var(--svc-gap));
+  --svc-reveal-delay: calc(var(--svc-grow-delay) + var(--svc-grow));
+}
+
+/* Centred over the heading; height follows the photo's aspect ratio so only the
+   width animates (small → full). */
+[data-services-outline] {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1440 / 993;
+  width: 100%;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
+
+[data-services-outline] path {
+  fill: none;
+  stroke: var(--c-white);
+  /* non-scaling-stroke keeps the weight constant through the grow; the gentle
+     viewport term keeps it from thinning to a shimmer on very large screens. */
+  stroke-width: clamp(1.1px, 0.11vw, 2.25px);
+  stroke-linejoin: miter;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* With JS the photo starts hidden so the morph can introduce it. Without JS
+   (.reveal-js absent) the photo simply stays visible — no regression. */
+.reveal-js [data-services-visual][data-anim="idle"] [data-services-photo] {
+  opacity: 0;
+}
+.reveal-js [data-services-visual][data-anim="idle"] [data-services-outline] {
+  opacity: 1;
+  width: var(--svc-small-w);
+}
+.reveal-js [data-services-visual][data-anim="idle"] [data-services-outline] path {
+  stroke-dashoffset: 1;
+}
+.reveal-js [data-services-visual][data-anim="idle"] [data-services-title] {
+  opacity: 0;
+}
+
+.reveal-js [data-services-visual][data-anim="play"] [data-services-outline] {
+  opacity: 1;
+  width: var(--svc-small-w);
+  animation:
+    svc-grow var(--svc-grow) cubic-bezier(0.5, 0, 0.2, 1) var(--svc-grow-delay) forwards,
+    svc-fade-out var(--svc-reveal) cubic-bezier(0.4, 0, 0.2, 1) var(--svc-reveal-delay) forwards;
+}
+.reveal-js [data-services-visual][data-anim="play"] [data-services-outline] path {
+  stroke-dashoffset: 1;
+  /* Gentle start, no long deceleration tail — the outline closes decisively. */
+  animation: svc-draw var(--svc-draw) cubic-bezier(0.4, 0, 0.5, 1) forwards;
+}
+.reveal-js [data-services-visual][data-anim="play"] [data-services-photo] {
+  opacity: 0;
+  animation: svc-fade-in var(--svc-reveal) cubic-bezier(0.4, 0, 0.2, 1) var(--svc-reveal-delay)
+    forwards;
+}
+.reveal-js [data-services-visual][data-anim="play"] [data-services-title] {
+  opacity: 0;
+  animation: svc-fade-in 640ms cubic-bezier(0.22, 1, 0.36, 1) 220ms forwards;
+}
+
+@keyframes svc-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes svc-grow {
+  from {
+    width: var(--svc-small-w);
+  }
+  to {
+    width: 100%;
+  }
+}
+@keyframes svc-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes svc-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: skip the morph entirely, show the final composition. */
+@media (prefers-reduced-motion: reduce) {
+  [data-services-visual] [data-services-photo] {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  [data-services-visual] [data-services-outline] {
+    opacity: 0 !important;
+    animation: none !important;
+  }
+  [data-services-visual] [data-services-title] {
+    opacity: 1 !important;
+    animation: none !important;
+  }
 }
 
 [data-service-row] {
+  position: relative; /* positioning context for the drawn separator */
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -440,8 +574,19 @@ img {
   width: 100%;
 }
 
-[data-service-row] + [data-service-row] {
-  border-top: 1px solid var(--c-divider-dark);
+/* Drawn separator: a 1px line that wipes in left→right as the row reveals,
+   echoing the intro outline trace. Default scaleX(1) keeps it visible with no
+   JS or under reduced motion (no regression). */
+[data-service-row]:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--c-divider-dark);
+  transform: scaleX(1);
+  transform-origin: left center;
 }
 
 [data-service-meta] {
@@ -462,7 +607,106 @@ img {
   display: flex;
   width: 100%;
   max-width: var(--container-max);
+  margin-inline: auto;
   flex-direction: column;
+
+  /* --- Services motion knobs (tune freely) --- */
+  --focus: 1;               /* base so color-mix/scale are valid before JS (#5) */
+  --svc-dim: 0.35;          /* opacity of an out-of-focus row */
+  --svc-title-scale: 0.02;  /* max extra scale on the focused title (1.00 → 1.02) */
+  --svc-row-rise: 22px;     /* Y travel on row reveal (16–32px) */
+  --svc-row-dur: 640ms;     /* row reveal duration (0.5–0.8s) */
+  --svc-row-stagger: 90ms;  /* body lags meta by this (60–100ms) */
+  --svc-line-dur: 700ms;    /* separator draw duration */
+  --svc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --svc-accent: #4f8bff;    /* brand blue on the active label — swap for exact value */
+}
+
+/* Pin wrappers. Off (no [data-spotlight="on"]) they are layout-transparent, so
+   no-JS / reduced-motion / mobile fall back to the plain stacked list. The
+   driver sets the track height inline and translates the list. */
+[data-services-track],
+[data-services-pin] {
+  width: 100%;
+}
+
+[data-services-track][data-spotlight="on"] [data-services-pin] {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden; /* clips the rows scrubbed past the lit centre */
+}
+
+[data-services-track][data-spotlight="on"] [data-services-list] {
+  will-change: transform; /* translateY set inline by the driver each frame */
+}
+
+/* --- Services: pinned scroll spotlight + drawn separators + row wipe-reveal ---
+   A tall [data-services-track] (height set inline by the driver) provides scroll
+   length; [data-services-pin] sticks; the driver translateY-scrubs the list so
+   the active service sits at the pin centre. It writes --focus (0..1, 1 = active)
+   per [data-service-row] and flips [data-services-track][data-spotlight] on/off.
+   The gate lives on the TRACK so it can style the pin/list (its descendants).
+   Single opacity owner (#4): reveal animates clip-path + translateY only; the
+   spotlight owns opacity. Knobs live on the list above. */
+
+/* The <article> is exempt from the generic translate/fade reveal: its children
+   carry the clip-wipe, leaving the article free to host the scroll dim. */
+.reveal-js [data-service-row][data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 300ms linear;
+}
+
+/* Spotlight — only once the driver enables it (desktop + motion allowed). The
+   extra [data-reveal] lifts specificity to (0,4,0) so this beats the page-wide
+   `.reveal-js [data-reveal].is-visible { opacity:1 }` (0,3,0) that lives later in
+   the file — otherwise revealed rows would clobber the dim back to 1 (#4). */
+[data-services-track][data-spotlight="on"] [data-service-row][data-reveal] {
+  opacity: calc(var(--svc-dim) + (1 - var(--svc-dim)) * var(--focus, 1));
+  transition: none;
+  will-change: opacity;
+}
+
+[data-services-track][data-spotlight="on"] [data-service-meta] h3 {
+  transform: scale(calc(1 + var(--svc-title-scale) * var(--focus, 1)));
+  transform-origin: left center;
+  will-change: transform;
+}
+
+[data-services-track][data-spotlight="on"] [data-service-meta] .cmwp-note {
+  color: color-mix(in oklab, var(--c-white), var(--svc-accent) calc(var(--focus, 1) * 100%));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Separator draws with the row's reveal. */
+  .reveal-js [data-service-row][data-reveal]:not(:first-child)::before {
+    transform: scaleX(0);
+    transition: transform var(--svc-line-dur) var(--svc-ease);
+  }
+  .reveal-js [data-service-row][data-reveal].is-visible:not(:first-child)::before {
+    transform: scaleX(1);
+  }
+
+  /* Row reveal: clip wipe + small rise, meta first then body (stagger). No
+     opacity here — that belongs solely to the spotlight (#4). */
+  .reveal-js [data-service-row][data-reveal] [data-service-meta],
+  .reveal-js [data-service-row][data-reveal] [data-service-body] {
+    transform: translateY(var(--svc-row-rise));
+    clip-path: inset(0 0 100% 0);
+    transition:
+      transform var(--svc-row-dur) var(--svc-ease),
+      clip-path var(--svc-row-dur) var(--svc-ease);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal-js [data-service-row][data-reveal] [data-service-body] {
+    --reveal-delay: var(--svc-row-stagger);
+  }
+  .reveal-js [data-service-row][data-reveal].is-visible [data-service-meta],
+  .reveal-js [data-service-row][data-reveal].is-visible [data-service-body] {
+    transform: none;
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 /* --- Contact --- */

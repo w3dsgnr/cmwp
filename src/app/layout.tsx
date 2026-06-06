@@ -28,8 +28,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // suppressHydrationWarning: the head script adds `reveal-js` to <html> before
+  // hydration; that intentional pre-hydration mutation would otherwise trip a
+  // hydration attribute-mismatch warning on this element.
   return (
-    <html lang="en" className={segoe.variable}>
+    <html lang="en" className={segoe.variable} suppressHydrationWarning>
       <head>
         {/* Set before paint so reveal targets hide instantly (with JS) but
             stay visible if JS is disabled. */}
