@@ -443,9 +443,17 @@ img {
    the full photo — larger on wider screens, exactly as the storyboard notes
    ("enlarge to the image size at the current window resolution"). */
 [data-services-visual] {
-  /* Small-outline width ≈ the heading footprint. Tracks .cmwp-display (clamp
-     below 1280, 88px above) so the frame is consistent; capped to the box. */
-  --svc-small-w: min(86%, clamp(360px, 56vw, 760px));
+  /* Small-outline width ≈ the heading footprint. Derived from the SAME clamp
+     as .cmwp-display (44px → 7vw → 88px), so the outline-to-heading ratio is
+     identical at every viewport width: 8.64em of the display size = 760px at
+     the 88px cap, 380px at the 44px floor. (A separate vw curve here used to
+     drift against the type scale and made the intro framing look different
+     per width.) Capped to the box on very narrow phones. */
+  --svc-small-w: min(86%, calc(clamp(2.75rem, 7vw, 5.5rem) * 8.64));
+  /* Screen-px stroke for the grow/fade phase (non-scaling-stroke). Chosen to
+     equal the draw-phase stroke at handoff: 0.5 viewBox units rendered at
+     --svc-small-w = 0.5 × (8.64 × display-clamp) / 210 ≈ display-clamp × 0.0206. */
+  --svc-stroke: calc(clamp(2.75rem, 7vw, 5.5rem) * 0.0206);
   --svc-draw: 1200ms;
   --svc-grow: 900ms;
   --svc-reveal: 620ms;
@@ -471,12 +479,25 @@ img {
 [data-services-outline] path {
   fill: none;
   stroke: var(--c-white);
-  /* non-scaling-stroke keeps the weight constant through the grow; the gentle
-     viewport term keeps it from thinning to a shimmer on very large screens. */
-  stroke-width: clamp(1.1px, 0.11vw, 2.25px);
+  /* DRAW PHASE: stroke + dash live in viewBox units so the pathLength=1
+     normalisation holds in every browser. (With vector-effect:
+     non-scaling-stroke, dasharray is computed in post-transform screen px and
+     pathLength is ignored — the trace shredded into short sliding segments
+     that varied with viewport width.) The element renders at --svc-small-w
+     during the whole trace, so 0.5 units ≈ var(--svc-stroke) on screen. */
+  stroke-width: 0.5;
   stroke-linejoin: miter;
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
+}
+
+/* GROW/FADE PHASE: once the trace has closed the contour (data-drawn, set on
+   the svc-draw animationend; the TSX flips vector-effect to non-scaling-stroke
+   at the same moment), drop the dash and hold a constant pixel stroke through
+   the grow — same weight as before the handoff, so no visible seam. */
+[data-services-visual][data-drawn] [data-services-outline] path {
+  stroke-dasharray: none;
+  stroke-width: var(--svc-stroke);
 }
 
 /* With JS the photo starts hidden so the morph can introduce it. Without JS
@@ -622,30 +643,33 @@ img {
   --svc-accent: #4f8bff;    /* brand blue on the active label — swap for exact value */
 }
 
-/* Pin wrappers. Off (no [data-spotlight="on"]) they are layout-transparent, so
-   no-JS / reduced-motion / mobile fall back to the plain stacked list. The
-   driver sets the track height inline and translates the list. */
+/* Pin wrappers. Outside 'pin' mode they are layout-transparent, so no-JS /
+   reduced-motion fall back to the plain stacked list. The driver sets the track
+   height inline and translates the list (pin mode only). */
 [data-services-track],
 [data-services-pin] {
   width: 100%;
 }
 
-[data-services-track][data-spotlight="on"] [data-services-pin] {
+[data-services-track][data-spotlight="pin"] [data-services-pin] {
   position: sticky;
   top: 0;
   height: 100vh;
   overflow: hidden; /* clips the rows scrubbed past the lit centre */
 }
 
-[data-services-track][data-spotlight="on"] [data-services-list] {
+[data-services-track][data-spotlight="pin"] [data-services-list] {
   will-change: transform; /* translateY set inline by the driver each frame */
 }
 
-/* --- Services: pinned scroll spotlight + drawn separators + row wipe-reveal ---
-   A tall [data-services-track] (height set inline by the driver) provides scroll
-   length; [data-services-pin] sticks; the driver translateY-scrubs the list so
-   the active service sits at the pin centre. It writes --focus (0..1, 1 = active)
-   per [data-service-row] and flips [data-services-track][data-spotlight] on/off.
+/* --- Services: scroll spotlight + drawn separators + row wipe-reveal ---
+   The driver writes --focus (0..1, 1 = active) per [data-service-row] and sets
+   [data-services-track][data-spotlight] to pin | flow | off:
+   - pin (desktop): a tall track (height set inline) provides scroll length;
+     [data-services-pin] sticks; the list is translateY-scrubbed so the active
+     service sits at the pin centre.
+   - flow (mobile): plain document flow, no pin — focus follows the row nearest
+     the viewport centre. Same --focus contract, so the rules below select both.
    The gate lives on the TRACK so it can style the pin/list (its descendants).
    Single opacity owner (#4): reveal animates clip-path + translateY only; the
    spotlight owns opacity. Knobs live on the list above. */
@@ -658,23 +682,27 @@ img {
   transition: opacity 300ms linear;
 }
 
-/* Spotlight — only once the driver enables it (desktop + motion allowed). The
-   extra [data-reveal] lifts specificity to (0,4,0) so this beats the page-wide
+/* Spotlight — only once the driver enables it (motion allowed); pin and flow
+   share the same focus styling. The extra [data-reveal] lifts specificity to
+   (0,4,0) so this beats the page-wide
    `.reveal-js [data-reveal].is-visible { opacity:1 }` (0,3,0) that lives later in
    the file — otherwise revealed rows would clobber the dim back to 1 (#4). */
-[data-services-track][data-spotlight="on"] [data-service-row][data-reveal] {
+[data-services-track][data-spotlight="pin"] [data-service-row][data-reveal],
+[data-services-track][data-spotlight="flow"] [data-service-row][data-reveal] {
   opacity: calc(var(--svc-dim) + (1 - var(--svc-dim)) * var(--focus, 1));
   transition: none;
   will-change: opacity;
 }
 
-[data-services-track][data-spotlight="on"] [data-service-meta] h3 {
+[data-services-track][data-spotlight="pin"] [data-service-meta] h3,
+[data-services-track][data-spotlight="flow"] [data-service-meta] h3 {
   transform: scale(calc(1 + var(--svc-title-scale) * var(--focus, 1)));
   transform-origin: left center;
   will-change: transform;
 }
 
-[data-services-track][data-spotlight="on"] [data-service-meta] .cmwp-note {
+[data-services-track][data-spotlight="pin"] [data-service-meta] .cmwp-note,
+[data-services-track][data-spotlight="flow"] [data-service-meta] .cmwp-note {
   color: color-mix(in oklab, var(--c-white), var(--svc-accent) calc(var(--focus, 1) * 100%));
 }
 

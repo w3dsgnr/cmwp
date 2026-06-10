@@ -30,10 +30,14 @@ const SPOTLIGHT = {
   // the first row sits just below the top (≈ the original banner gap) instead of
   // being pushed to centre — no big empty band at entry/exit.
   edgeVh: 0.07,
-  // Below this viewport width the pin/spotlight is off (plain stacked list) to
-  // avoid jitter on mobile.
+  // Below this viewport width the spotlight switches from 'pin' to 'flow':
+  // rows stay in normal document flow and the focus follows the viewport
+  // centre. Pinning is desktop-only — sticky 100vh + per-frame scrub fights
+  // the mobile URL-bar viewport resizes and momentum scrolling.
   minWidth: 768,
 } as const;
+
+type SpotlightMode = 'pin' | 'flow' | 'off';
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 const smoothstep = (t: number) => t * t * (3 - 2 * t);
@@ -42,10 +46,18 @@ export default function ServicesSection() {
   const visualRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [anim, setAnim] = useState<'idle' | 'play'>('idle');
+  // Set when the outline trace (svc-draw) finishes. The trace must run WITHOUT
+  // vector-effect: non-scaling-stroke — with it, browsers compute
+  // stroke-dasharray in post-transform screen pixels and ignore the pathLength
+  // normalisation, which shredded the draw into short sliding segments whose
+  // size depended on the viewport. Once drawn (no dash active any more) the
+  // path switches to non-scaling-stroke so the grow phase keeps the constant
+  // pixel stroke it always had.
+  const [drawn, setDrawn] = useState(false);
 
-  // Play the morph once the visual scrolls into view (plays once). The scale is
-  // a fixed factor in CSS, so the whole intro is identical at every resolution —
-  // nothing is measured at runtime.
+  // Play the morph once the visual scrolls into view (plays once). The small
+  // outline width is derived from the heading's own type clamp in CSS, so the
+  // framing is consistent at every resolution — nothing is measured at runtime.
   useEffect(() => {
     const visual = visualRef.current;
     if (!visual) return;
@@ -71,12 +83,16 @@ export default function ServicesSection() {
     return () => io.disconnect();
   }, []);
 
-  // Pinned scroll spotlight: a tall track gives scroll length, a sticky pin holds
-  // the list, and the list is translateY-scrubbed by the section's scroll
-  // progress so the active service sits at the pin centre — fully lit while
-  // neighbours fall to --svc-dim. Reversible by construction (reads progress each
-  // frame). Writes --focus (0..1) per row; CSS turns that into opacity, a hair of
-  // title scale, and the blue active label. Disabled on mobile / reduced-motion.
+  // Scroll spotlight: writes --focus (0..1) per row; CSS turns that into
+  // opacity, a hair of title scale, and the blue active label. Two modes share
+  // the same bell falloff + per-frame smoothing:
+  //  - 'pin' (desktop): a tall track gives scroll length, a sticky pin holds
+  //    the list, and the list is translateY-scrubbed by the section's scroll
+  //    progress so the active service sits at the pin centre.
+  //  - 'flow' (mobile): no pinning — rows stay in normal flow and the focus
+  //    follows whichever row centre is nearest the viewport centre.
+  // Reversible by construction (reads scroll state each frame). 'off' under
+  // reduced-motion: plain list, everything lit.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -90,24 +106,32 @@ export default function ServicesSection() {
     const prefersReduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
-    const enabled = () =>
-      !prefersReduced && window.innerWidth >= SPOTLIGHT.minWidth;
+    const mode = (): SpotlightMode => {
+      if (prefersReduced) return 'off';
+      return window.innerWidth >= SPOTLIGHT.minWidth ? 'pin' : 'flow';
+    };
 
-    // Geometry in the list's own coordinate space (offsetTop — unaffected by the
-    // scrub transform). rowStep = the gap BETWEEN adjacent centres (~200px) and
-    // is the ONLY focus-falloff scale; pinH is only for centring + progress.
+    // rowStep = the gap BETWEEN adjacent row centres and is the ONLY
+    // focus-falloff scale.
+    const medianGap = (centres: number[]) => {
+      const gaps: number[] = [];
+      for (let i = 1; i < centres.length; i += 1) {
+        gaps.push(centres[i] - centres[i - 1]);
+      }
+      gaps.sort((a, b) => a - b);
+      return gaps.length ? gaps[gaps.length >> 1] : 1;
+    };
+
+    // Pin-mode geometry in the list's own coordinate space (offsetTop —
+    // unaffected by the scrub transform); pinH is only for centring + progress.
+    // Flow mode skips this cache and reads viewport rects every frame instead.
     let rowCentre: number[] = [];
     let rowStep = 1;
     let pinH = 0;
     let listH = 0;
     const measure = () => {
       rowCentre = rows.map((r) => r.offsetTop + r.offsetHeight / 2);
-      const gaps: number[] = [];
-      for (let i = 1; i < rowCentre.length; i += 1) {
-        gaps.push(rowCentre[i] - rowCentre[i - 1]);
-      }
-      gaps.sort((a, b) => a - b);
-      rowStep = gaps.length ? gaps[gaps.length >> 1] : 1; // median gap
+      rowStep = medianGap(rowCentre);
       pinH = pin.clientHeight;
       listH = list.offsetHeight;
     };
@@ -124,13 +148,22 @@ export default function ServicesSection() {
       return 1 - smoothstep(t);
     };
 
+    // Lerp every row toward its bell target around focusPoint; true = settled.
+    const applyFocus = (centres: number[], step: number, focusPoint: number) => {
+      let settled = true;
+      for (let i = 0; i < rows.length; i += 1) {
+        const target = bell(Math.abs(centres[i] - focusPoint) / step);
+        focus[i] += (target - focus[i]) * SPOTLIGHT.smooth;
+        if (Math.abs(target - focus[i]) > 0.003) settled = false;
+        rows[i].style.setProperty('--focus', focus[i].toFixed(3));
+      }
+      return settled;
+    };
+
     let rafId = 0;
     let inView = false;
 
-    const frame = () => {
-      rafId = 0;
-      if (!enabled() || !inView) return;
-
+    const pinFrame = () => {
       const rect = track.getBoundingClientRect();
       const span = rect.height - pinH;
       const progress = span > 0 ? clamp01(-rect.top / span) : 0;
@@ -160,13 +193,33 @@ export default function ServicesSection() {
       }
       list.style.transform = `translateY(${translate.toFixed(2)}px)`;
 
-      let settled = Math.abs(targetTranslate - translate) < 0.4;
-      for (let i = 0; i < rows.length; i += 1) {
-        const target = bell(Math.abs(rowCentre[i] - targetCentre) / rowStep);
-        focus[i] += (target - focus[i]) * SPOTLIGHT.smooth;
-        if (Math.abs(target - focus[i]) > 0.003) settled = false;
-        rows[i].style.setProperty('--focus', focus[i].toFixed(3));
-      }
+      const focusSettled = applyFocus(rowCentre, rowStep, targetCentre);
+      return focusSettled && Math.abs(targetTranslate - translate) < 0.4;
+    };
+
+    const flowFrame = () => {
+      // Viewport-space centres, re-read every frame: rows sit in normal flow,
+      // so the scroll itself moves their rects (no cache to invalidate).
+      const centres = rows.map((r) => {
+        const b = r.getBoundingClientRect();
+        return b.top + b.height / 2;
+      });
+      // Clamp the focus point to the row band so the first/last rows are fully
+      // lit while the section is entering/leaving (mirrors the pin-mode clamp).
+      const mid = window.innerHeight / 2;
+      const focusPoint = Math.min(
+        centres[centres.length - 1],
+        Math.max(centres[0], mid),
+      );
+      return applyFocus(centres, medianGap(centres), focusPoint);
+    };
+
+    const frame = () => {
+      rafId = 0;
+      const m = mode();
+      if (m === 'off' || !inView) return;
+
+      const settled = m === 'pin' ? pinFrame() : flowFrame();
 
       // Keep ticking while animating; idle out once settled. A scroll/resize
       // re-wakes the loop via start().
@@ -174,30 +227,36 @@ export default function ServicesSection() {
     };
 
     const start = () => {
-      if (!rafId && enabled() && inView) rafId = requestAnimationFrame(frame);
+      if (!rafId && mode() !== 'off' && inView) {
+        rafId = requestAnimationFrame(frame);
+      }
     };
     const stop = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
     };
 
-    // Enable/disable the whole pinned mechanism; clear inline styles when off so
-    // the CSS off-state (plain flow) wins. Gate + track height are applied BEFORE
-    // measure() so the pin is already sticky/100vh — otherwise offsetTop/pinH read
-    // against the wrong offset parent.
+    // Switch the mechanism between modes; clear inline styles outside 'pin' so
+    // the CSS off/flow state (plain flow layout) wins. Gate + track height are
+    // applied BEFORE measure() so the pin is already sticky/100vh — otherwise
+    // offsetTop/pinH read against the wrong offset parent.
     const sync = () => {
-      if (enabled()) {
-        track.dataset.spotlight = 'on';
+      const m = mode();
+      track.dataset.spotlight = m;
+      if (m === 'pin') {
         track.style.height = `${Math.round(100 + (rows.length - 1) * SPOTLIGHT.segVh * 100)}vh`;
         measure();
         primed = false;
         start();
       } else {
-        stop();
-        track.dataset.spotlight = 'off';
         track.style.height = '';
         list.style.transform = '';
-        rows.forEach((r) => r.style.setProperty('--focus', '1'));
+        if (m === 'flow') {
+          start();
+        } else {
+          stop();
+          rows.forEach((r) => r.style.setProperty('--focus', '1'));
+        }
       }
     };
 
@@ -213,10 +272,8 @@ export default function ServicesSection() {
 
     // Re-measure when the list reflows (font swap, wrap changes) and wake the loop.
     const ro = new ResizeObserver(() => {
-      if (enabled()) {
-        measure();
-        start();
-      }
+      if (mode() === 'pin') measure();
+      start();
     });
     ro.observe(list);
 
@@ -244,7 +301,12 @@ export default function ServicesSection() {
       aria-labelledby="services-banner-heading"
       data-services-section
     >
-      <div data-services-visual data-anim={anim} ref={visualRef}>
+      <div
+        data-services-visual
+        data-anim={anim}
+        data-drawn={drawn ? 'true' : undefined}
+        ref={visualRef}
+      >
         <Image
           src={asset('/images/Mask%20group.webp')}
           alt=""
@@ -265,7 +327,14 @@ export default function ServicesSection() {
             aria-hidden="true"
             focusable="false"
           >
-            <path d={M_SHAPE} pathLength={1} vectorEffect="non-scaling-stroke" />
+            <path
+              d={M_SHAPE}
+              pathLength={1}
+              vectorEffect={drawn ? 'non-scaling-stroke' : undefined}
+              onAnimationEnd={(e) => {
+                if (e.animationName === 'svc-draw') setDrawn(true);
+              }}
+            />
           </svg>
 
           <div data-services-title>
