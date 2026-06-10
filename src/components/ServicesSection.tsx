@@ -352,7 +352,7 @@ export default function ServicesSection() {
       <div data-services-list>
         <article data-service-row data-reveal>
           <div data-service-meta>
-            <p className="cmwp-note text-c-white">ADVISORY</p>
+            <p className="cmwp-note text-c-white">DEVELOPMENT</p>
             <h3 className="cmwp-title text-c-white">
               Development Advisory
               <br />

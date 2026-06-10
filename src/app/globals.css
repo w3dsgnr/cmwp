@@ -927,7 +927,7 @@ img {
 @media (max-width: 767.98px) {
   :root {
     --header-offset-y: 14px;
-    --header-h: 80px;
+    --header-h: 66px; /* was 80px; ~17% slimmer per design feedback */
     --hero-min-h: auto;
     --hero-image-h: clamp(240px, 56vw, 400px);
 
