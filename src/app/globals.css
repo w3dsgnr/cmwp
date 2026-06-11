@@ -739,7 +739,12 @@ img {
   .reveal-js [data-service-row][data-reveal].is-visible [data-service-meta],
   .reveal-js [data-service-row][data-reveal].is-visible [data-service-body] {
     transform: none;
-    clip-path: inset(0 0 0 0);
+    /* Overshoot the bottom edge: clip-path lives on the meta/body containers
+       (16px font), but it crops the 40px h3 whose tight 1.06 line-height lets
+       Segoe's glyph ink overflow ~5.4px past the box (+~0.7px from the focus
+       scale). em here would be a unit trap — fix in px. Only widens the clip
+       window: no layout shift, body (line-height 1.5) unaffected. */
+    clip-path: inset(0 0 -10px 0);
   }
 }
 
