@@ -618,7 +618,13 @@ img {
 }
 
 [data-service-body] {
-  flex: 0 1 604px;
+  /* The row is space-between, so the empty mid-gap = inner − meta − body and
+     grows with the viewport on wide screens (the void in the storyboard). The
+     separation halves when the body absorbs ~half of it: since inner ≈ vw−128
+     and meta is capped at 460px, body ≈ vw/2 lands the leftover at ~50% across
+     the whole wide range. Floored at the old 604px (no change <~1208px) and
+     capped at 960px once the container stops growing (~1920px). */
+  flex: 0 1 clamp(604px, 50vw, 960px);
   display: flex;
   flex-direction: column;
   gap: 16px;
